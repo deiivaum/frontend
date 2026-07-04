@@ -1,35 +1,33 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, LogIn, ShieldCheck } from 'lucide-react';
 import Logo from '../components/Logo';
 import Button from '../components/Button';
-import { useAuthStore } from '../store/useAuthStore'; // <-- Ajuste o caminho conforme sua pasta
+import { useAuthStore } from '../store/useAuthStore';
 
 export default function LoginPage() {
+  const router = useRouter();
   const [matricula, setMatricula] = useState('');
   const [senha, setSenha] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  // Extraindo estados e função de login do Zustand
   const { login, isLoading, formErrors } = useAuthStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Chama a função da store que fará a validação com Zod
     await login({ matricula, senha });
+    router.push('/dashboard');
   };
 
   return (
     <div className="login-page">
       <div className="login-card">
-        
         <Logo />
 
         <form onSubmit={handleSubmit} className="form-container">
           <div className="input-group">
-            
-            {/* Input Matrícula */}
             <div className="input-wrapper" style={{ display: 'flex', flexDirection: 'column' }}>
               <input
                 type="text"
@@ -37,10 +35,9 @@ export default function LoginPage() {
                 onChange={(e) => setMatricula(e.target.value)}
                 className="form-input"
                 placeholder="Matrícula"
-                disabled={isLoading} // Desabilita enquanto carrega
+                disabled={isLoading}
                 style={formErrors?.matricula ? { borderColor: '#ef4444' } : {}}
               />
-              {/* Mensagem de Erro Zod */}
               {formErrors?.matricula && (
                 <span style={{ color: '#ef4444', fontSize: '12px', marginTop: '4px' }}>
                   {formErrors.matricula}
@@ -48,7 +45,6 @@ export default function LoginPage() {
               )}
             </div>
 
-            {/* Input Senha */}
             <div className="input-wrapper" style={{ display: 'flex', flexDirection: 'column' }}>
               <div style={{ position: 'relative' }}>
                 <input
@@ -60,12 +56,12 @@ export default function LoginPage() {
                   disabled={isLoading}
                   style={formErrors?.senha ? { borderColor: '#ef4444', width: '100%' } : { width: '100%' }}
                 />
-                
+
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="btn-toggle-password"
-                  aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                  aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
                   disabled={isLoading}
                 >
                   {showPassword ? (
@@ -75,7 +71,6 @@ export default function LoginPage() {
                   )}
                 </button>
               </div>
-              {/* Mensagem de Erro Zod */}
               {formErrors?.senha && (
                 <span style={{ color: '#ef4444', fontSize: '12px', marginTop: '4px' }}>
                   {formErrors.senha}
@@ -90,12 +85,12 @@ export default function LoginPage() {
             </a>
           </div>
 
-          <Button 
-            label={isLoading ? "Entrando..." : "Entrar"} 
-            type="submit" 
+          <Button
+            label={isLoading ? 'Entrando...' : 'Entrar'}
+            type="submit"
             disabled={isLoading}
             style={isLoading ? { opacity: 0.7, cursor: 'not-allowed' } : {}}
-            icon={!isLoading && <LogIn size={18} strokeWidth={2} />} 
+            icon={!isLoading && <LogIn size={18} strokeWidth={2} />}
           />
         </form>
 
@@ -108,7 +103,6 @@ export default function LoginPage() {
             Precisa de ajuda? <a href="#" className="support-link">Contate o suporte técnico</a>
           </div>
         </div>
-
       </div>
     </div>
   );

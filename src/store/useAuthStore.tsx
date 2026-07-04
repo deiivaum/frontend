@@ -1,50 +1,52 @@
-// store/useAuthStore.ts
-import { create } from 'zustand';
+﻿import { create } from 'zustand';
 import { z } from 'zod';
 
-// 1. Schema de validação com Zod
 export const loginSchema = z.object({
   matricula: z.string().min(4, 'A matrícula deve ter no mínimo 4 caracteres.'),
-  senha: z.string().min(6, 'A senha deve ter no mínimo 6 caracteres.'),
+  senha: z.string(),
 });
 
-// Tipo inferido automaticamente
 export type LoginFormData = z.infer<typeof loginSchema>;
+type FormErrors = Partial<Record<keyof LoginFormData | 'global', string>>;
 
 interface AuthState {
   isLoading: boolean;
-  formErrors: Record<string, string> | null;
+  formErrors: FormErrors;
   login: (data: LoginFormData) => Promise<void>;
 }
 
-// 2. Criação do estado global
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>()((set) => ({
   isLoading: false,
-  formErrors: null,
-  
+  formErrors: {},
+
   login: async (data) => {
-    set({ isLoading: true, formErrors: null });
+    set({ isLoading: true, formErrors: {} });
 
     try {
-      // O parse dispara um erro se os dados forem inválidos
-      const validData = loginSchema.parse(data);
+      const result = loginSchema.safeParse(data);
 
-      // Simulando a requisição para o backend (ex: fetch para sua API)
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      
-      console.log('Login efetuado com sucesso (Zod validado):', validData);
-      set({ isLoading: false });
+      if (!result.success) {
+        const errors: FormErrors = {};
 
-    } catch (error) {
-      // Captura e formata os erros do Zod para exibir nos inputs
-      if (error instanceof z.ZodError) {
-        const errors: Record<string, string> = {};
-        error.errors.forEach((err) => {
-          if (err.path[0]) {
-            errors[err.path[0].toString()] = err.message;
+        result.error.issues.forEach((issue) => {
+          const field = issue.path[0];
+
+          if (typeof field === 'string') {
+            errors[field as keyof LoginFormData] = issue.message;
           }
         });
+
         set({ formErrors: errors, isLoading: false });
+        return;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      console.log('Login efetuado com sucesso (Zod validado):', result.data);
+      set({ isLoading: false });
+    } catch (error) {
+      if (error instanceof Error) {
+        set({ formErrors: { global: error.message }, isLoading: false });
       } else {
         set({ formErrors: { global: 'Erro inesperado.' }, isLoading: false });
       }
