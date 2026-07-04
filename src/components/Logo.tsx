@@ -11,7 +11,7 @@ export default function Logo() {
         />
     </div>
       <h1 className="system-title">SIGTEC</h1>
-      <p className="system-desc">Portal Administrativo de Gestãoo</p>
+      <p className="system-desc">Portal Administrativo de Gestão</p>
     </div>
   );
 }
