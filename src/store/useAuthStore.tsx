@@ -1,4 +1,3 @@
-// store/useAuthStore.ts
 import { create } from 'zustand';
 import { z } from 'zod';
 
@@ -25,29 +24,35 @@ export const useAuthStore = create<AuthState>((set) => ({
   login: async (data) => {
     set({ isLoading: true, formErrors: null });
 
-    try {
-      // O parse dispara um erro se os dados forem inválidos
-      const validData = loginSchema.parse(data);
+    // Aqui usamos o safeParse (A melhor forma de usar Zod com TypeScript)
+    const result = loginSchema.safeParse(data);
 
+    // Se a validação falhar, tratamos o erro aqui mesmo, fora do catch
+    if (!result.success) {
+      const errors: Record<string, string> = {};
+      
+      // O TypeScript já sabe automaticamente que result.error existe aqui
+      result.error.issues.forEach((err) => {
+        if (err.path[0]) {
+          errors[err.path[0].toString()] = err.message;
+        }
+      });
+      
+      set({ formErrors: errors, isLoading: false });
+      return; // O return impede que o código continue e tente fazer o login
+    }
+
+    // Se chegou até aqui, result.success é true e result.data tem os dados validados
+    try {
       // Simulando a requisição para o backend (ex: fetch para sua API)
       await new Promise((resolve) => setTimeout(resolve, 1500));
       
-      console.log('Login efetuado com sucesso (Zod validado):', validData);
+      console.log('Login efetuado com sucesso:', result.data);
       set({ isLoading: false });
 
     } catch (error) {
-      // Captura e formata os erros do Zod para exibir nos inputs
-      if (error instanceof z.ZodError) {
-        const errors: Record<string, string> = {};
-        error.errors.forEach((err) => {
-          if (err.path[0]) {
-            errors[err.path[0].toString()] = err.message;
-          }
-        });
-        set({ formErrors: errors, isLoading: false });
-      } else {
-        set({ formErrors: { global: 'Erro inesperado.' }, isLoading: false });
-      }
+      // O catch agora fica limpo, apenas para erros do servidor (quando a API falha)
+      set({ formErrors: { global: 'Erro inesperado no servidor.' }, isLoading: false });
     }
   },
 }));
